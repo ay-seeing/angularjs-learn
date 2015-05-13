@@ -1,22 +1,63 @@
-var app = angular.module('myayy',[]);
+angular.module("btst", []).
+directive("btstAccordion", function () {
+    return {
+        restrict: "E",
+        transclude: true,
+        replace: true,
+        scope: {},
+        template:
+            "<div class='accordion' ng-transclude></div>",
+        link: function (scope, element, attrs) {
 
-app.controller('shop',function(){
-	this.qty = 2;
-	this.cost = 3;
-	this.inCurr = 'EUR';
-	this.correncies = ['USD','EUR','CNY'];
-	this.usdToForeignRates = {
-		USD: 1,
-		EUR: 0.74,
-		CNY: 6.09
-	}
-	this.total = function total(outCurr){
-		return this.convertCurrency(this.qty * this.cost, this.inCurr, outCurr);
-	}
-	this.convertCurrency = function convertCurrency(amount, inCurr, outCurr){
-		return amount * this.usdToForeignRates[outCurr] * 1 / this.usdToForeignRates[inCurr];
-	}
-	this.pay = function pay(){
-		window.alert('谢谢!');
-	}
-});
+            // give this element a unique id
+            var id = element.attr("id");
+            if (!id) {
+                id = "btst-acc" + scope.$id;
+                element.attr("id", id);
+            }
+
+            // set data-parent on accordion-toggle elements
+            var arr = element.find(".accordion-toggle");
+            for (var i = 0; i < arr.length; i++) {
+                $(arr[i]).attr("data-parent", "#" + id);
+                $(arr[i]).attr("href", "#" + id + "collapse" + i);
+            }
+            arr = element.find(".accordion-body");
+            $(arr[0]).addClass("in"); // expand first pane
+            for (var i = 0; i < arr.length; i++) {
+                $(arr[i]).attr("id", id + "collapse" + i);
+            }
+        },
+        controller: function () {}
+    };
+}).
+directive('btstPane', function () {
+    return {
+        require: "^btstAccordion",
+        restrict: "E",
+        transclude: true,
+        replace: true,
+        scope: {
+            title: "@",
+            category: "=",
+            order: "="
+        },
+        template:
+            "<div class='accordion-group' >" +
+            "  <div class='accordion-heading'>" +
+            "    <a class='accordion-toggle' data-toggle='collapse'> {{category.name}} - </a>" +
+       
+            "  </div>" +
+            "<div class='accordion-body collapse'>" +
+            "  <div class='accordion-inner' ng-transclude></div>" +
+            "  </div>" +
+            "</div>",
+        link: function (scope, element, attrs) {
+            scope.$watch("title", function () {
+                // NOTE: this requires jQuery (jQLite won't do html)
+                var hdr = element.find(".accordion-toggle");
+                hdr.html(scope.title);
+            });
+        }
+    };
+})
